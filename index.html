@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎱 Gumball Animal Quiz!</title>
+<link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --c1: #FF6B6B; --c2: #FF8E53; --c3: #FFC940; --c4: #4ECDC4;
+    --c5: #7C5CBF; --c6: #F06292; --c7: #42A5F5; --c8: #66BB6A;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    background: linear-gradient(270deg,#ff6b6b,#ff8e53,#ffc940,#66bb6a,#42a5f5,#7c5cbf,#f06292,#ff6b6b);
+    background-size: 1600% 1600%;
+    animation: rainbowBG 18s ease infinite;
+  }
+
+  @keyframes rainbowBG {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* FLOATING GUMBALLS */
+  .floating-gums {
+    position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  .gum {
+    position: absolute; border-radius: 50%;
+    animation: floatUp linear infinite;
+  }
+  @keyframes floatUp {
+    from { transform: translateY(110vh) scale(.8); opacity: 0; }
+    15%  { opacity: .85; }
+    to   { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+  }
+
+  .stars { display: none; }
+
+  .app {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; width: 100%; }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+
+  /* ===== REGISTRATION ===== */
+  #screen-reg .inner {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 36px;
+    padding: 48px 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+
+  .machine-preview {
+    width: 120px; height: 120px; margin: 0 auto 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  .reg-title {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: 42px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .reg-title .r { color: #FF6B6B }
+  .reg-title .o { color: #FF8E53 }
+  .reg-title .y { color: #FFC940 }
+  .reg-title .g { color: #66BB6A }
+  .reg-title .b { color: #42A5F5 }
+  .reg-title .p { color: #CE93D8 }
+
+  .reg-sub { font-size: 16px; color: rgba(255,255,255,0.6); margin-bottom: 32px; font-weight: 700; }
+
+  .field-label {
+    text-align: left; font-size: 12px; font-weight: 900;
+    color: rgba(255,255,255,0.5); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px; display: block;
+  }
+  .field-input {
+    width: 100%; padding: 16px 20px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 18px;
+    font-size: 20px; font-family: 'Nunito', sans-serif; font-weight: 800;
+    color: white; outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .field-input::placeholder { color: rgba(255,255,255,0.3); }
+  .field-input:focus { border-color: #FFC940; background: rgba(255,255,255,0.15); }
+
+  .group-row { display: flex; gap: 12px; margin-top: 8px; }
+  .group-btn {
+    flex: 1; padding: 18px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 18px;
+    font-family: 'Fredoka One', cursive; font-size: 20px;
+    color: rgba(255,255,255,0.7); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .group-btn:hover { background: rgba(255,255,255,0.14); }
+  .group-btn.sel {
+    border-color: #FFC940;
+    background: rgba(255,201,64,0.2);
+    color: #FFC940;
+    transform: scale(1.04);
+    box-shadow: 0 0 20px rgba(255,201,64,0.3);
+  }
+
+  .start-btn {
+    margin-top: 28px; width: 100%;
+    padding: 20px; border: none; border-radius: 22px;
+    font-family: 'Bubblegum Sans', cursive; font-size: 26px;
+    color: #1a0533; cursor: pointer;
+    background: linear-gradient(135deg, #FFC940, #FF8E53);
+    box-shadow: 0 8px 30px rgba(255,201,64,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .start-btn::before {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+    background: rgba(255,255,255,0.25);
+    transform: skewX(-20deg);
+    transition: left 0.5s;
+  }
+  .start-btn:hover::before { left: 150%; }
+  .start-btn:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(255,201,64,0.5); }
+  .start-btn:disabled { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.3); box-shadow: none; cursor: not-allowed; transform: none; }
+
+  /* ===== GAME SCREEN ===== */
+  #screen-game { flex-direction: column; align-items: center; gap: 0; }
+
+  .game-header {
+    width: 100%; max-width: 1000px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; flex-wrap: wrap; gap: 10px;
+  }
+  .player-tag {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-family: 'Fredoka One', cursive; font-size: 16px;
+    color: #FFC940;
+  }
+  .score-tag {
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-family: 'Fredoka One', cursive; font-size: 16px;
+    color: white;
+  }
+  .prog-wrap {
+    width: 100%; max-width: 1000px;
+    padding: 0 20px 10px;
+  }
+  .prog-bar-bg {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px; height: 10px; overflow: hidden;
+  }
+  .prog-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ECDC4, #FFC940, #FF6B6B);
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(.34,1.56,.64,1);
+  }
+  .prog-label {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    font-weight: 800; margin-top: 4px; text-align: right;
+  }
+
+  .game-body {
+    display: flex; gap: 24px; align-items: flex-start;
+    width: 100%; max-width: 1000px; padding: 0 20px 30px;
+  }
+
+  /* MACHINE */
+  .machine-wrap {
+    flex: 0 0 auto;
+    position: sticky; top: 20px;
+  }
+  .machine-svg-big { width: 240px; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.4)); }
+
+  /* COINS */
+  .coins-section { flex: 1; }
+  .coins-heading {
+    font-family: 'Bubblegum Sans', cursive; font-size: 20px;
+    color: rgba(255,255,255,0.7); text-align: center;
+    margin-bottom: 16px;
+  }
+  .coins-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .coin {
+    aspect-ratio: 1; border-radius: 50%; border: none;
+    cursor: pointer; position: relative; overflow: hidden;
+    font-family: 'Fredoka One', cursive; font-size: 18px;
+    color: white; font-weight: 900;
+    transition: transform 0.18s cubic-bezier(.34,1.56,.64,1), box-shadow 0.18s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.2);
+  }
+  .coin::after {
+    content: '';
+    position: absolute; top: 15%; left: 18%;
+    width: 35%; height: 22%;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+    transform: rotate(-30deg);
+  }
+  .coin:hover:not(.used) {
+    transform: scale(1.18) translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.4), 0 0 20px currentColor;
+  }
+  .coin.used { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+  .coin.c-ok { background: #4caf50 !important; box-shadow: 0 0 0 3px #81C784 !important; }
+  .coin.c-no { background: #e53935 !important; box-shadow: 0 0 0 3px #EF9A9A !important; }
+  .coin-inner { position: relative; z-index: 1; pointer-events: none; font-size: 20px; line-height: 1; }
+
+  /* ===== QUESTION MODAL ===== */
+  .modal-bg {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(10,2,30,0.82);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-bg.hide { display: none; }
+
+  .q-card {
+    background: linear-gradient(145deg, #2d1065, #1a0533);
+    border: 2px solid rgba(255,255,255,0.18);
+    border-radius: 36px;
+    padding: 36px 32px;
+    max-width: 460px; width: 100%;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+    animation: popUp 0.45s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes popUp {
+    from { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+  }
+
+  .q-ball-icon {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 56px; line-height: 1;
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2), 0 8px 30px rgba(0,0,0,0.3), inset 0 4px 0 rgba(255,255,255,0.25);
+    animation: bounce 0.5s cubic-bezier(.34,1.56,.64,1) 0.2s both;
+  }
+  @keyframes bounce {
+    from { transform: scale(0) translateY(-30px); }
+    to   { transform: scale(1) translateY(0); }
+  }
+
+  .q-label {
+    font-size: 12px; font-weight: 900;
+    color: rgba(255,255,255,0.4); letter-spacing: 3px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .q-spanish {
+    font-family: 'Bubblegum Sans', cursive; font-size: 44px;
+    color: white; margin-bottom: 4px;
+    text-shadow: 0 2px 20px rgba(255,201,64,0.3);
+  }
+  .q-hint { font-size: 14px; color: rgba(255,255,255,0.45); font-weight: 700; margin-bottom: 24px; }
+
+  .opts { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.07);
+    border: 2px solid rgba(255,255,255,0.14);
+    border-radius: 18px;
+    font-family: 'Fredoka One', cursive; font-size: 20px;
+    color: white; cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .opt:hover:not(:disabled) {
+    background: rgba(255,201,64,0.15);
+    border-color: #FFC940;
+    transform: translateX(6px);
+  }
+  .opt.right { background: rgba(76,175,80,0.25); border-color: #81C784; color: #A5D6A7; }
+  .opt.wrong { background: rgba(229,57,53,0.25); border-color: #EF9A9A; color: #FFCDD2; }
+  .opt:disabled { cursor: not-allowed; }
+  .opt-emoji { font-size: 28px; min-width: 36px; }
+  .opt-letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900;
+    min-width: 30px;
+  }
+
+  .feedback {
+    font-family: 'Bubblegum Sans', cursive; font-size: 30px;
+    min-height: 44px; margin-top: 18px;
+  }
+  .feedback.ok { color: #81C784; }
+  .feedback.no { color: #EF9A9A; }
+
+  .next-btn {
+    margin-top: 14px;
+    padding: 14px 36px;
+    background: linear-gradient(135deg, #FFC940, #FF8E53);
+    border: none; border-radius: 18px;
+    font-family: 'Bubblegum Sans', cursive; font-size: 22px;
+    color: #1a0533; cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 6px 20px rgba(255,201,64,0.35);
+  }
+  .next-btn:hover { transform: scale(1.07); }
+  .next-btn.hide { display: none; }
+
+  /* ===== REPORT ===== */
+  #screen-report .inner {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 36px;
+    padding: 44px 36px;
+    max-width: 520px; width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+    animation: popUp 0.5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .rep-title {
+    font-family: 'Bubblegum Sans', cursive; font-size: 40px;
+    color: white; margin-bottom: 4px;
+  }
+  .rep-who { font-size: 15px; color: rgba(255,255,255,0.5); font-weight: 800; margin-bottom: 20px; }
+
+  .grade-ring {
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 4px 0 rgba(255,255,255,0.2);
+  }
+  .grade-n {
+    font-family: 'Bubblegum Sans', cursive; font-size: 58px;
+    color: white; line-height: 1;
+  }
+  .grade-d { font-size: 16px; color: rgba(255,255,255,0.7); font-weight: 800; }
+
+  .rep-msg {
+    font-family: 'Fredoka One', cursive; font-size: 22px;
+    color: white;
+    display: inline-block;
+    padding: 10px 28px;
+    border-radius: 50px;
+    margin: 12px 0 20px;
+  }
+
+  .stats {
+    display: flex; gap: 10px; margin-bottom: 22px;
+  }
+  .stat {
+    flex: 1; border-radius: 18px; padding: 14px 8px;
+    font-family: 'Fredoka One', cursive;
+  }
+  .stat .sn { font-size: 34px; color: white; }
+  .stat .sl { font-size: 11px; font-family: 'Nunito', sans-serif; font-weight: 900; margin-top: 2px; }
+  .stat.sc { background: rgba(76,175,80,0.25); border: 2px solid rgba(129,199,132,0.4); }
+  .stat.sc .sl { color: #A5D6A7; }
+  .stat.sw { background: rgba(229,57,53,0.25); border: 2px solid rgba(239,154,154,0.4); }
+  .stat.sw .sl { color: #FFCDD2; }
+  .stat.ss { background: rgba(255,193,7,0.2); border: 2px solid rgba(255,241,118,0.3); }
+  .stat.ss .sl { color: #FFF176; }
+
+  .review {
+    text-align: left;
+    max-height: 220px; overflow-y: auto;
+    border-radius: 16px;
+    border: 2px solid rgba(255,255,255,0.1);
+    margin-bottom: 20px;
+    padding: 6px;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
+  }
+  .ri {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 10px;
+    font-size: 13px; font-weight: 800; margin-bottom: 3px;
+    color: white;
+  }
+  .ri.ok { background: rgba(76,175,80,0.2); }
+  .ri.no { background: rgba(229,57,53,0.2); }
+  .ri.sk { background: rgba(255,193,7,0.12); }
+  .ri span { opacity: 0.7; font-size: 12px; }
+
+  .restart {
+    padding: 18px 40px; border: none; border-radius: 22px;
+    font-family: 'Bubblegum Sans', cursive; font-size: 26px;
+    color: #1a0533; cursor: pointer;
+    background: linear-gradient(135deg, #FFC940, #FF6B6B);
+    box-shadow: 0 8px 30px rgba(255,201,64,0.35);
+    transition: transform 0.2s;
+  }
+  .restart:hover { transform: scale(1.06); }
+
+  /* CONFETTI */
+  .confetti-stage { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+  .cf {
+    position: absolute;
+    animation: fall linear forwards;
+    border-radius: 2px;
+  }
+  @keyframes fall {
+    from { transform: translateY(-30px) rotate(0deg) scale(1); opacity: 1; }
+    to   { transform: translateY(105vh) rotate(900deg) scale(0.5); opacity: 0; }
+  }
+  @keyframes wiggle {
+    0%,100% { margin-left: 0; } 25% { margin-left: 8px; } 75% { margin-left: -8px; }
+  }
+</style>
+</head>
+<body>
+<div class="floating-gums" id="floating-gums"></div>
+<div class="app">
+
+  <!-- REGISTRATION -->
+  <div id="screen-reg" class="screen active">
+    <div class="inner">
+      <svg class="machine-preview" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="56" rx="48" ry="50" fill="#FF6B6B" opacity=".15"/>
+        <ellipse cx="60" cy="56" rx="44" ry="46" fill="white" opacity=".9"/>
+        <circle cx="44" cy="46" r="9" fill="#FF6B6B" opacity=".9"/>
+        <circle cx="62" cy="38" r="9" fill="#4ECDC4" opacity=".9"/>
+        <circle cx="78" cy="48" r="9" fill="#FFC940" opacity=".9"/>
+        <circle cx="40" cy="62" r="8" fill="#A78BFA" opacity=".9"/>
+        <circle cx="60" cy="60" r="9" fill="#FF8E53" opacity=".9"/>
+        <circle cx="78" cy="64" r="8" fill="#66BB6A" opacity=".9"/>
+        <ellipse cx="47" cy="34" rx="14" ry="9" fill="white" opacity=".25"/>
+        <rect x="54" y="100" width="12" height="16" rx="2" fill="#ccc"/>
+        <rect x="38" y="114" width="44" height="6" rx="3" fill="#e74c3c"/>
+        <rect x="30" y="108" width="60" height="10" rx="5" fill="#FF6B6B"/>
+        <rect x="44" y="96" width="32" height="14" rx="5" fill="#c0392b"/>
+        <rect x="48" y="98" width="24" height="10" rx="4" fill="#e74c3c"/>
+        <rect x="42" y="92" width="36" height="8" rx="4" fill="#bdc3c7"/>
+        <rect x="54" y="92" width="12" height="8" rx="2" fill="#95a5a6"/>
+      </svg>
+
+      <div class="reg-title">
+        <span class="r">G</span><span class="o">u</span><span class="y">m</span><span class="g">b</span><span class="b">a</span><span class="p">l</span><span class="r">l</span>
+        <span class="o"> </span>
+        <span class="y">Q</span><span class="g">u</span><span class="b">i</span><span class="p">z</span><span class="r">!</span>
+      </div>
+      <p class="reg-sub">🐾 Learn Animals in English! 🌍</p>
+
+      <label class="field-label">✏️ Your Name</label>
+      <input id="stu-name" class="field-input" type="text" placeholder="Type your name here..." maxlength="30"/>
+
+      <label class="field-label" style="margin-top:20px">🏫 Your Group</label>
+      <div class="group-row">
+        <button class="group-btn" onclick="pickGroup('A')">🅰️ Group A</button>
+        <button class="group-btn" onclick="pickGroup('B')">🅱️ Group B</button>
+      </div>
+
+      <button id="go-btn" class="start-btn" onclick="startGame()" disabled>🎱 Let's Play!</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="screen" style="min-height:100vh; flex-direction:column;">
+    <div class="game-header">
+      <div class="player-tag" id="p-tag">🌟 Student</div>
+      <div class="score-tag" id="s-tag">✅ 0 &nbsp;❌ 0</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog" style="width:0%"></div></div>
+      <div class="prog-label" id="prog-lbl">0 / 20</div>
+    </div>
+    <div class="game-body">
+      <!-- Machine -->
+      <div class="machine-wrap">
+        <svg class="machine-svg-big" viewBox="0 0 240 380" xmlns="http://www.w3.org/2000/svg">
+          <!-- glow -->
+          <ellipse cx="120" cy="145" rx="90" ry="95" fill="url(#mg)" opacity=".18"/>
+          <defs>
+            <radialGradient id="mg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFC940"/>
+              <stop offset="100%" stop-color="transparent"/>
+            </radialGradient>
+          </defs>
+          <!-- bowl -->
+          <ellipse cx="120" cy="145" rx="88" ry="92" fill="none" stroke="#7C5CBF" stroke-width="4"/>
+          <ellipse cx="120" cy="145" rx="84" ry="88" fill="rgba(255,255,255,0.06)"/>
+          <!-- gumballs -->
+          <circle cx="98"  cy="118" r="13" fill="#FF6B6B"/>
+          <circle cx="122" cy="105" r="13" fill="#4ECDC4"/>
+          <circle cx="146" cy="120" r="13" fill="#FFC940"/>
+          <circle cx="88"  cy="142" r="12" fill="#A78BFA"/>
+          <circle cx="112" cy="138" r="14" fill="#FF8E53"/>
+          <circle cx="138" cy="144" r="12" fill="#66BB6A"/>
+          <circle cx="96"  cy="164" r="12" fill="#F06292"/>
+          <circle cx="122" cy="162" r="13" fill="#42A5F5"/>
+          <circle cx="148" cy="166" r="11" fill="#CE93D8"/>
+          <circle cx="84"  cy="178" r="10" fill="#EF9A9A"/>
+          <circle cx="130" cy="180" r="11" fill="#80DEEA"/>
+          <circle cx="156" cy="176" r="9"  fill="#FFF176"/>
+          <!-- shine -->
+          <ellipse cx="90" cy="100" rx="26" ry="16" fill="white" opacity=".18"/>
+          <!-- cap -->
+          <ellipse cx="120" cy="57" rx="88" ry="14" fill="#7C5CBF"/>
+          <rect x="32" y="52" width="176" height="10" rx="5" fill="#9C7CF4"/>
+          <!-- pole -->
+          <rect x="110" y="234" width="20" height="80" fill="#D0D0D0"/>
+          <!-- slot collar -->
+          <rect x="46" y="230" width="148" height="20" rx="10" fill="#7C5CBF"/>
+          <rect x="108" y="230" width="24" height="20" rx="4" fill="#9C7CF4"/>
+          <!-- dispense box -->
+          <rect x="56" y="250" width="128" height="56" rx="10" fill="#c0392b"/>
+          <rect x="66" y="258" width="108" height="40" rx="8" fill="#9b2021"/>
+          <!-- dispensed ball -->
+          <circle id="d-ball" cx="120" cy="278" r="16" fill="transparent"/>
+          <circle id="d-shine" cx="112" cy="270" r="5" fill="transparent" opacity=".4"/>
+          <!-- base -->
+          <rect x="74" y="328" width="92" height="22" rx="8" fill="#9C7CF4"/>
+          <rect x="60" y="316" width="120" height="18" rx="9" fill="#7C5CBF"/>
+        </svg>
+      </div>
+
+      <!-- Coins -->
+      <div class="coins-section">
+        <div class="coins-heading">🪙 Pick a coin to pop a gumball!</div>
+        <div class="coins-grid" id="coins-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div id="screen-report" class="screen">
+    <div class="inner">
+      <div class="rep-title">🎊 Report Card! 🎊</div>
+      <div class="rep-who" id="rep-who"></div>
+      <div class="grade-ring" id="grade-ring">
+        <div class="grade-n" id="grade-n">0</div>
+        <div class="grade-d">/ 10</div>
+      </div>
+      <div class="rep-msg" id="rep-msg"></div>
+      <div class="stats">
+        <div class="stat sc"><div class="sn" id="rp-ok">0</div><div class="sl">✅ Correct</div></div>
+        <div class="stat sw"><div class="sn" id="rp-no">0</div><div class="sl">❌ Wrong</div></div>
+        <div class="stat ss"><div class="sn" id="rp-sk">0</div><div class="sl">⏭️ Skipped</div></div>
+      </div>
+      <div style="font-family:'Fredoka One',cursive;font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:8px;text-align:left;padding-left:4px">📋 Question Review</div>
+      <div class="review" id="review"></div>
+      <button class="restart" onclick="restart()">🔄 Play Again!</button>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-bg hide" id="modal">
+    <div class="q-card">
+      <div class="q-ball-icon" id="q-icon">🐒</div>
+      <div class="q-label">What is this animal in English?</div>
+      <div class="q-spanish" id="q-sp">Chango</div>
+      <div class="q-hint">Choose the correct answer 👇</div>
+      <div class="opts" id="q-opts"></div>
+      <div class="feedback" id="q-fb"></div>
+      <button class="next-btn hide" id="nxt" onclick="closeQ()">Next ➡️</button>
+    </div>
+  </div>
+
+  <div class="confetti-stage" id="cfstage"></div>
+</div>
+
+<script>
+const QS = [
+  {sp:"Mono",          em:"🐒", ans:"Monkey",     opts:["Monkey","Gorilla","Bear"]},
+  {sp:"León",          em:"🦁", ans:"Lion",        opts:["Tiger","Lion","Cheetah"]},
+  {sp:"Tigre",         em:"🐯", ans:"Tiger",       opts:["Leopard","Tiger","Jaguar"]},
+  {sp:"Elefante",      em:"🐘", ans:"Elephant",    opts:["Elephant","Rhino","Hippo"]},
+  {sp:"Jirafa",        em:"🦒", ans:"Giraffe",     opts:["Giraffe","Camel","Zebra"]},
+  {sp:"Cebra",         em:"🦓", ans:"Zebra",       opts:["Zebra","Horse","Giraffe"]},
+  {sp:"Gorila",        em:"🦍", ans:"Gorilla",     opts:["Gorilla","Monkey","Bear"]},
+  {sp:"Rinoceronte",   em:"🦏", ans:"Rhino",       opts:["Hippo","Rhino","Elephant"]},
+  {sp:"Hipopótamo",    em:"🦛", ans:"Hippo",       opts:["Hippo","Rhino","Elephant"]},
+  {sp:"Oso",           em:"🐻", ans:"Bear",        opts:["Bear","Wolf","Fox"]},
+  {sp:"Lobo",          em:"🐺", ans:"Wolf",        opts:["Wolf","Fox","Hyena"]},
+  {sp:"Leopardo",      em:"🐆", ans:"Leopard",     opts:["Cheetah","Leopard","Tiger"]},
+  {sp:"Cocodrilo",     em:"🐊", ans:"Crocodile",   opts:["Lizard","Snake","Crocodile"]},
+  {sp:"Serpiente",     em:"🐍", ans:"Snake",       opts:["Lizard","Snake","Crocodile"]},
+  {sp:"Águila",        em:"🦅", ans:"Eagle",       opts:["Eagle","Owl","Hawk"]},
+  {sp:"Búho",          em:"🦉", ans:"Owl",         opts:["Eagle","Bat","Owl"]},
+  {sp:"Murciélago",    em:"🦇", ans:"Bat",         opts:["Bat","Owl","Bird"]},
+  {sp:"Zorro",         em:"🦊", ans:"Fox",         opts:["Fox","Wolf","Raccoon"]},
+  {sp:"Jaguar",        em:"🐅", ans:"Jaguar",      opts:["Leopard","Cheetah","Jaguar"]},
+  {sp:"Cheetah",       em:"🐆", ans:"Cheetah",     opts:["Cheetah","Jaguar","Leopard"]}
+];
+
+const EMJ = {
+  Monkey:"🐒", Lion:"🦁", Tiger:"🐯", Elephant:"🐘", Giraffe:"🦒",
+  Zebra:"🦓", Gorilla:"🦍", Rhino:"🦏", Hippo:"🦛", Bear:"🐻",
+  Wolf:"🐺", Leopard:"🐆", Crocodile:"🐊", Snake:"🐍", Eagle:"🦅",
+  Owl:"🦉", Bat:"🦇", Fox:"🦊", Jaguar:"🐅", Cheetah:"🐆",
+  Camel:"🐫", Hyena:"🦴", Hawk:"🦅", Lizard:"🦎", Bird:"🐦",
+  Raccoon:"🦝"
+};
+
+const COIN_GRAD = [
+  ["#FF6B6B","#c0392b"],["#FFD700","#f39c12"],["#4ECDC4","#1289A7"],
+  ["#A78BFA","#7c4dff"],["#81C784","#2e7d32"],["#FF8E53","#e55208"],
+  ["#F06292","#ad1457"],["#4DD0E1","#006064"],["#AED581","#558b2f"],
+  ["#FFB74D","#bf360c"],["#BA68C8","#4a148c"],["#4FC3F7","#01579b"],
+  ["#A5D6A7","#1b5e20"],["#FFF176","#f57f17"],["#EF9A9A","#b71c1c"],
+  ["#80DEEA","#00838f"],["#CE93D8","#4a148c"],["#FF8A65","#bf360c"],
+  ["#B0BEC5","#37474f"],["#80CBC4","#004d40"]
+];
+
+const BALL_COLORS = [
+  "#FF6B6B","#FFD700","#4ECDC4","#A78BFA","#81C784","#FF8E53","#F06292",
+  "#4DD0E1","#AED581","#FFB74D","#BA68C8","#4FC3F7","#A5D6A7","#FFF176",
+  "#EF9A9A","#80DEEA","#CE93D8","#FF8A65","#B0BEC5","#80CBC4"
+];
+
+const LETTERS = ['A','B','C'];
+
+let G = { name:'', group:'', ans:{}, cur:null };
+
+/* Registration */
+document.getElementById('stu-name').addEventListener('input', checkReady);
+function pickGroup(g){
+  G.group = g;
+  document.querySelectorAll('.group-btn').forEach(b => {
+    b.classList.toggle('sel', b.textContent.includes(g));
+  });
+  checkReady();
+}
+function checkReady(){
+  document.getElementById('go-btn').disabled = !(document.getElementById('stu-name').value.trim() && G.group);
+}
+
+function startGame(){
+  G.name = document.getElementById('stu-name').value.trim();
+  G.ans = {};
+  showScreen('screen-game');
+  document.getElementById('p-tag').textContent = '🌟 ' + G.name + ' · Group ' + G.group;
+  buildCoins();
+  updateHUD();
+}
+
+function buildCoins(){
+  const grid = document.getElementById('coins-grid');
+  grid.innerHTML = '';
+  for(let i=0;i<20;i++){
+    const b = document.createElement('button');
+    b.className = 'coin'; b.id = 'coin-'+i;
+    b.style.background = `linear-gradient(145deg, ${COIN_GRAD[i][0]}, ${COIN_GRAD[i][1]})`;
+    b.innerHTML = `<span class="coin-inner">${i+1}</span>`;
+    b.onclick = () => openQ(i);
+    grid.appendChild(b);
+  }
+}
+
+function updateHUD(){
+  let ok=0, no=0, total=Object.keys(G.ans).length;
+  Object.values(G.ans).forEach(v=>{ if(v.r==='ok') ok++; else if(v.r==='no') no++; });
+  document.getElementById('s-tag').innerHTML = `✅ ${ok} &nbsp;❌ ${no}`;
+  document.getElementById('prog').style.width = (total/20*100)+'%';
+  document.getElementById('prog-lbl').textContent = total+' / 20';
+}
+
+function openQ(i){
+  if(G.ans[i]) return;
+  G.cur = i;
+  const q = QS[i];
+  document.getElementById('q-icon').textContent = q.em;
+  document.getElementById('q-icon').style.background = `radial-gradient(circle at 35% 35%, ${BALL_COLORS[i]}cc, ${BALL_COLORS[i]}66)`;
+  document.getElementById('q-icon').style.boxShadow = `0 8px 30px ${BALL_COLORS[i]}66, inset 0 4px 0 rgba(255,255,255,0.25)`;
+  document.getElementById('q-sp').textContent = q.sp;
+  document.getElementById('q-fb').textContent = '';
+  document.getElementById('q-fb').className = 'feedback';
+  document.getElementById('nxt').classList.add('hide');
+
+  // Animate dispensed ball
+  document.getElementById('d-ball').setAttribute('fill', BALL_COLORS[i]);
+  document.getElementById('d-shine').setAttribute('fill', 'white');
+
+  const opts = document.getElementById('q-opts');
+  opts.innerHTML = '';
+  const shuffled = [...q.opts].sort(()=>Math.random()-0.5);
+  shuffled.forEach((o, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `<span class="opt-letter">${LETTERS[idx]}</span><span class="opt-emoji">${EMJ[o]||'🐾'}</span>${o}`;
+    btn.onclick = () => pick(o, q.ans, btn);
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('modal').classList.remove('hide');
+}
+
+function pick(chosen, correct, el){
+  document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+  const i = G.cur;
+  const ok = chosen === correct;
+
+  if(ok){
+    el.classList.add('right');
+    document.getElementById('q-fb').textContent = '🎉 Awesome! Correct! 🌟';
+    document.getElementById('q-fb').className = 'feedback ok';
+    G.ans[i] = {r:'ok'};
+    playOK(); confetti(40);
+    mark(i, true);
+  } else {
+    el.classList.add('wrong');
+    document.getElementById('q-fb').textContent = `😅 Oopsie! It was ${correct}!`;
+    document.getElementById('q-fb').className = 'feedback no';
+    G.ans[i] = {r:'no', c:correct, ch:chosen};
+    playNO();
+    mark(i, false);
+    document.querySelectorAll('.opt').forEach(b=>{
+      if(b.textContent.trim().endsWith(correct)) b.classList.add('right');
+    });
+  }
+  document.getElementById('nxt').classList.remove('hide');
+  updateHUD();
+  if(Object.keys(G.ans).length===20) setTimeout(()=>{ closeQ(); showReport(); },1200);
+}
+
+function mark(i, ok){
+  const c = document.getElementById('coin-'+i);
+  c.classList.add('used', ok ? 'c-ok' : 'c-no');
+  c.innerHTML = `<span class="coin-inner">${ok?'✅':'❌'}</span>`;
+}
+
+function closeQ(){
+  document.getElementById('modal').classList.add('hide');
+  document.getElementById('d-ball').setAttribute('fill','transparent');
+  document.getElementById('d-shine').setAttribute('fill','transparent');
+}
+
+function playOK(){
+  try {
+    const ac = new AudioContext();
+    [[523.25,0],[659.25,.1],[783.99,.2],[1046.5,.3]].forEach(([f,t])=>{
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value=f; o.type='sine';
+      g.gain.setValueAtTime(.15,ac.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.25);
+      o.start(ac.currentTime+t); o.stop(ac.currentTime+t+.3);
+    });
+  }catch(e){}
+}
+
+function playNO(){
+  try {
+    const ac = new AudioContext();
+    [[280,0],[200,.18],[160,.36]].forEach(([f,t])=>{
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value=f; o.type='sawtooth';
+      g.gain.setValueAtTime(.1,ac.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.22);
+      o.start(ac.currentTime+t); o.stop(ac.currentTime+t+.28);
+    });
+  }catch(e){}
+}
+
+function confetti(n=30){
+  const s = document.getElementById('cfstage');
+  const cols = ['#FF6B6B','#FFD700','#4ECDC4','#A78BFA','#81C784','#FF8E53','#F06292','#42A5F5'];
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div');
+    p.className = 'cf';
+    const size = 8+Math.random()*10;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${size}px; height:${size}px;
+      background:${cols[Math.floor(Math.random()*cols.length)]};
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation: fall ${1.2+Math.random()*1.5}s ${Math.random()*.5}s linear forwards;
+    `;
+    s.appendChild(p);
+    p.addEventListener('animationend',()=>p.remove());
+  }
+}
+
+function showReport(){
+  let ok=0,no=0,sk=0;
+  for(let i=0;i<20;i++){
+    const a=G.ans[i];
+    if(!a) sk++; else if(a.r==='ok') ok++; else no++;
+  }
+  const grade = Math.round(ok/20*100)/10;
+  document.getElementById('rp-ok').textContent=ok;
+  document.getElementById('rp-no').textContent=no;
+  document.getElementById('rp-sk').textContent=sk;
+  document.getElementById('rep-who').textContent=`👤 ${G.name}  ·  🏫 Group ${G.group}`;
+  document.getElementById('grade-n').textContent=Number.isInteger(grade)?grade:grade.toFixed(1);
+
+  const gr=document.getElementById('grade-ring'), msg=document.getElementById('rep-msg');
+  if(grade>=9){ gr.style.background='linear-gradient(135deg,#FFD700,#FF8E53)'; msg.textContent='🏆 You\'re a STAR! Outstanding!'; msg.style.background='linear-gradient(135deg,#FFD700,#FF8E53)'; confetti(80); }
+  else if(grade>=7){ gr.style.background='linear-gradient(135deg,#66BB6A,#1b5e20)'; msg.textContent='🌟 Great job! Keep it up!'; msg.style.background='linear-gradient(135deg,#66BB6A,#388e3c)'; confetti(40); }
+  else if(grade>=5){ gr.style.background='linear-gradient(135deg,#42A5F5,#01579b)'; msg.textContent='😊 Good effort! Keep practicing!'; msg.style.background='linear-gradient(135deg,#42A5F5,#0288d1)'; }
+  else { gr.style.background='linear-gradient(135deg,#FF6B6B,#c62828)'; msg.textContent='💪 Keep studying! You can do it!'; msg.style.background='linear-gradient(135deg,#FF8A65,#bf360c)'; }
+
+  const rev=document.getElementById('review'); rev.innerHTML='';
+  for(let i=0;i<20;i++){
+    const q=QS[i], a=G.ans[i];
+    const d=document.createElement('div');
+    if(!a){ d.className='ri sk'; d.innerHTML=`${q.em} <b>${q.sp}</b> <span>→ ⏭️ Skipped</span>`; }
+    else if(a.r==='ok'){ d.className='ri ok'; d.innerHTML=`${q.em} <b>${q.sp}</b> <span>→ ✅ ${q.ans}</span>`; }
+    else{ d.className='ri no'; d.innerHTML=`${q.em} <b>${q.sp}</b> <span>→ ❌ ${a.ch} (✅ ${q.ans})</span>`; }
+    rev.appendChild(d);
+  }
+  showScreen('screen-report');
+}
+
+function restart(){
+  G={name:'',group:'',ans:{},cur:null};
+  document.getElementById('stu-name').value='';
+  document.querySelectorAll('.group-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('go-btn').disabled=true;
+  showScreen('screen-reg');
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* FLOATING GUMBALLS */
+(function spawnGums(){
+  const container = document.getElementById('floating-gums');
+  const colors = ["#FF6B6B","#FFD700","#4ECDC4","#A78BFA","#81C784","#FF8E53","#F06292","#42A5F5","#ffffff","#FFF176"];
+  setInterval(()=>{
+    const g = document.createElement('div');
+    g.className = 'gum';
+    const size = 18 + Math.random() * 32;
+    const opacity = 0.55 + Math.random() * 0.35;
+    g.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      background:radial-gradient(circle at 35% 32%, rgba(255,255,255,0.6), ${colors[Math.floor(Math.random()*colors.length)]});
+      box-shadow: inset 0 ${size*0.1}px 0 rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.15);
+      opacity:${opacity};
+      animation-duration:${6+Math.random()*7}s;
+      animation-delay:${Math.random()*2}s;
+    `;
+    container.appendChild(g);
+    setTimeout(()=>g.remove(), 13000);
+  }, 350);
+})();
+</script>
+</body>
+</html>
